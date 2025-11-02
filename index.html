@@ -12,15 +12,15 @@
   .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.2); width: 340px; margin: 50px auto; }
   button { padding: 15px 25px; margin: 15px; border: none; border-radius: 10px; background: #0074D9; color: white; font-size: 18px; cursor: pointer; transition: 0.2s; }
   button:hover { background: #005fa3; transform: scale(1.05); }
-  .question { margin: 20px auto; padding: 20px; background: white; border-radius: 12px; width: 80%; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-  .group { display: flex; justify-content: space-around; margin-top: 15px; }
-  .arrow-box { border: 2px dashed #ccc; width: 40%; padding: 10px; border-radius: 8px; min-height: 60px; }
-  .arrow { font-size: 40px; cursor: grab; margin: 10px; display: inline-block; user-select: none; }
+  .question { margin: 20px auto; padding: 20px; background: white; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+  .group { display: flex; justify-content: space-around; margin-top: 15px; flex-wrap: wrap; }
+  .arrow-box { border: 2px dashed #ccc; width: 40%; padding: 10px; border-radius: 8px; min-height: 80px; }
+  .arrow { font-size: 50px; cursor: grab; margin: 10px; display: inline-block; user-select: none; touch-action: none; }
   .arrow.up { color: green; }
   .arrow.down { color: red; }
   #timer { font-size: 22px; font-weight: bold; color: #ff4136; margin-top: 10px; }
   #result { font-size: 20px; font-weight: bold; color: #2ECC40; margin-top: 20px; }
-  #scoreboard { margin-top: 30px; font-size: 18px; text-align: left; width: 80%; margin-left: auto; margin-right: auto; }
+  #scoreboard { margin-top: 30px; font-size: 18px; text-align: left; width: 90%; margin-left: auto; margin-right: auto; }
   .arrow-display { font-size: 28px; margin-right: 5px; }
   .arrow-display.up { color: green; }
   .arrow-display.down { color: red; }
@@ -99,28 +99,53 @@ function showQuestion() {
       <h2>${q.title}</h2>
       <h3>Người chơi: <span style="color:#0074D9">${team.name}</span></h3>
       <div class="group">
-        <div class="arrow-box" id="no" ondrop="drop(event)" ondragover="allowDrop(event)">
-          <strong>Nợ</strong>
-        </div>
-        <div class="arrow-box" id="co" ondrop="drop(event)" ondragover="allowDrop(event)">
-          <strong>Có</strong>
-        </div>
+        <div class="arrow-box" id="no"><strong>Nợ</strong></div>
+        <div class="arrow-box" id="co"><strong>Có</strong></div>
       </div>
       <div style="margin-top:30px;">
-        <span class="arrow up" draggable="true" ondragstart="drag(event)" id="up">↑</span>
-        <span class="arrow down" draggable="true" ondragstart="drag(event)" id="down">↓</span>
+        <span class="arrow up" id="up">↑</span>
+        <span class="arrow down" id="down">↓</span>
       </div>
       <button onclick="checkAnswer()">Nộp bài</button>
     </div>
   `;
+
+  enableTouchDrag("up");
+  enableTouchDrag("down");
 }
 
-function allowDrop(ev) { ev.preventDefault(); }
-function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
-function drop(ev) {
-  ev.preventDefault();
-  const data = ev.dataTransfer.getData("text");
-  ev.target.appendChild(document.getElementById(data));
+// --- Kéo thả cảm ứng ---
+function enableTouchDrag(id) {
+  const arrow = document.getElementById(id);
+  let offsetX = 0, offsetY = 0;
+
+  arrow.addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    offsetX = touch.clientX - arrow.getBoundingClientRect().left;
+    offsetY = touch.clientY - arrow.getBoundingClientRect().top;
+    arrow.style.position = "absolute";
+    arrow.style.zIndex = "1000";
+  });
+
+  arrow.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    arrow.style.left = (touch.clientX - offsetX) + "px";
+    arrow.style.top = (touch.clientY - offsetY) + "px";
+  });
+
+  arrow.addEventListener("touchend", (e) => {
+    const touch = e.changedTouches[0];
+    const x = touch.clientX;
+    const y = touch.clientY;
+    const elements = document.elementsFromPoint(x, y);
+    const target = elements.find(el => el.classList.contains("arrow-box"));
+    if (target) target.appendChild(arrow);
+    arrow.style.position = "static";
+    arrow.style.left = "";
+    arrow.style.top = "";
+    arrow.style.zIndex = "";
+  });
 }
 
 function checkAnswer(timeout = false) {
