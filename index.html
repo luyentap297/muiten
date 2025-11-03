@@ -52,8 +52,8 @@
 
 <script>
 const questions = [
-  { title: "Câu 1: Tài sản", answer: { no: "up", co: "down" }},
-  { title: "Câu 2: Nguồn vốn", answer: { no: "down", co: "up" }}
+  { title: "Câu 1: Chi phí", answer: { no: "up", co: "down" }},
+  { title: "Câu 2: Doanh thu", answer: { no: "down", co: "up" }}
 ];
 
 let teams = [
@@ -103,22 +103,37 @@ function showQuestion() {
         <div class="arrow-box" id="co"><strong>Có</strong></div>
       </div>
       <div style="margin-top:30px;">
-        <span class="arrow up" id="up">↑</span>
-        <span class="arrow down" id="down">↓</span>
+        <span class="arrow up" id="up" draggable="true">↑</span>
+        <span class="arrow down" id="down" draggable="true">↓</span>
       </div>
       <button onclick="checkAnswer()">Nộp bài</button>
     </div>
   `;
 
-  enableTouchDrag("up");
-  enableTouchDrag("down");
+  enableDragAndTouch("up");
+  enableDragAndTouch("down");
 }
 
-// --- Kéo thả cảm ứng ---
-function enableTouchDrag(id) {
+// --- Hỗ trợ kéo thả cho cả chuột và cảm ứng ---
+function enableDragAndTouch(id) {
   const arrow = document.getElementById(id);
   let offsetX = 0, offsetY = 0;
 
+  // Chuột
+  arrow.addEventListener("dragstart", (e) => {
+    e.dataTransfer.setData("text/plain", id);
+  });
+
+  document.querySelectorAll(".arrow-box").forEach(box => {
+    box.addEventListener("dragover", (e) => e.preventDefault());
+    box.addEventListener("drop", (e) => {
+      const draggedId = e.dataTransfer.getData("text/plain");
+      const draggedArrow = document.getElementById(draggedId);
+      box.appendChild(draggedArrow);
+    });
+  });
+
+  // Cảm ứng
   arrow.addEventListener("touchstart", (e) => {
     const touch = e.touches[0];
     offsetX = touch.clientX - arrow.getBoundingClientRect().left;
@@ -221,8 +236,5 @@ function backToLogin() {
   document.getElementById("login").classList.add("active");
 }
 </script>
-
 </body>
 </html>
-
-
