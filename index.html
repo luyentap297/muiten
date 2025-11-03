@@ -21,12 +21,16 @@
   #timer { font-size: 22px; font-weight: bold; color: #ff4136; margin-top: 10px; }
   #result { font-size: 20px; font-weight: bold; color: #2ECC40; margin-top: 20px; }
   #scoreboard { margin-top: 30px; font-size: 18px; text-align: left; width: 90%; margin-left: auto; margin-right: auto; }
+  .arrow-display { font-size: 28px; margin-right: 5px; }
+  .arrow-display.up { color: green; }
+  .arrow-display.down { color: red; }
 </style>
 </head>
 <body>
 
 <h1>🎯 Trò chơi Mũi Tên Thông Minh</h1>
 
+<!-- Màn hình chọn nhóm -->
 <div id="login" class="screen active">
   <div class="login-box">
     <h2>Chọn nhóm để bắt đầu</h2>
@@ -35,11 +39,13 @@
   </div>
 </div>
 
+<!-- Màn hình trò chơi -->
 <div id="game" class="screen"></div>
 <div id="timer"></div>
 <div id="result"></div>
 <div id="scoreboard"></div>
 
+<!-- Âm thanh -->
 <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg"></audio>
 <audio id="sound-timeout" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
@@ -62,12 +68,16 @@ let timeLeft = 05;
 function startGame(teamIndex) {
   currentTeamIndex = teamIndex;
   currentQuestion = 0;
+
+  // 👉 Xóa kết quả cũ, chỉ giữ lại lần chơi mới nhất
+  teams[teamIndex].score = 0;
+  teams[teamIndex].results = [];
+
   document.getElementById("login").classList.remove("active");
   document.getElementById("game").classList.add("active");
   showQuestion();
   startTimer();
 }
-
 function startTimer() {
   timeLeft = 05;
   document.getElementById("timer").textContent = "⏰ Thời gian: " + timeLeft + "s";
@@ -108,12 +118,12 @@ function showQuestion() {
   enableDragAndTouch("down");
 }
 
-// --- Hỗ trợ kéo thả chuột và cảm ứng ---
+// --- Hỗ trợ kéo thả cho cả chuột và cảm ứng ---
 function enableDragAndTouch(id) {
   const arrow = document.getElementById(id);
   let offsetX = 0, offsetY = 0;
 
-  // === Kéo bằng chuột ===
+  // Chuột
   arrow.addEventListener("dragstart", (e) => {
     e.dataTransfer.setData("text/plain", id);
   });
@@ -127,7 +137,7 @@ function enableDragAndTouch(id) {
     });
   });
 
-  // === Kéo bằng cảm ứng ===
+  // Cảm ứng
   arrow.addEventListener("touchstart", (e) => {
     const touch = e.touches[0];
     offsetX = touch.clientX - arrow.getBoundingClientRect().left;
@@ -158,6 +168,10 @@ function enableDragAndTouch(id) {
 }
 
 function checkAnswer(timeout = false) {
+  // Ngăn người chơi bấm nhiều lần
+  const submitBtn = document.querySelector("button[onclick='checkAnswer()']");
+  if (submitBtn) submitBtn.disabled = true;
+
   clearInterval(timer);
   const q = questions[currentQuestion];
   const team = teams[currentTeamIndex];
@@ -194,7 +208,6 @@ function checkAnswer(timeout = false) {
     }
   }, 1500);
 }
-
 function playSound(type) {
   document.getElementById(`sound-${type}`).play();
 }
